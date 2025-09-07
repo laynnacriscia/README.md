@@ -1,27 +1,10 @@
-# README.md
-CREATE OR REPLACE TABLE `t1engenhariadados.Turma3_grupo14.Clientes` (
-    ID_Cliente INT64,
-    Nome_Cliente STRING,
-    Email_Cliente STRING,
-    Estado_Cliente STRING
-);
+### **1. Introdução: A Missão da Livraria DevSaber**
 
--- Tabela de Produtos
--- Armazena informações únicas de cada produto.
-CREATE OR REPLACE TABLE `t1engenhariadados.Turma3_grupo14.Produtos` (
-    ID_Produto INT64,
-    Nome_Produto STRING,
-    Categoria_Produto STRING,
-    Preco_Produto NUMERIC
-);
+**Contexto para o professor transmitir:**
 
--- Tabela de Vendas
--- Tabela de fatos que relaciona clientes e produtos, registrando cada transação.
--- As relações com Clientes e Produtos são lógicas, mantidas pelos campos de ID.
-CREATE OR REPLACE TABLE `t1engenhariadados.Turma3_grupo14.Vendas` (
-    ID_Venda INT64,
-    ID_Cliente INT64,
-    ID_Produto INT64,
-    Data_Venda DATE,
-    Quantidade INT64
-);
+“Olá, pessoal! Hoje, vamos deixar de ser apenas estudantes de SQL para nos tornarmos analistas de dados em uma missão real. Nossa cliente é a ‘Livraria DevSaber’, uma nova loja online que fez suas primeiras vendas e, até agora, anotou tudo em uma planilha. Isso é um começo, mas para crescer, eles precisam de *insights*. Nossa missão é transformar essa planilha em um *mini data warehouse* inteligente no Google BigQuery. Vamos construir todo o pipeline de dados: desde criar a estrutura, carregar os dados, até extrair as respostas que ajudarão a livraria a entender seus negócios.”
+
+**Perguntas para a turma:**
+
+- Por que uma planilha não é ideal para uma empresa que quer analisar suas vendas a fundo?
+- Que tipo de perguntas vocês acham que o dono da livraria gostaria de responder com esses dados?
