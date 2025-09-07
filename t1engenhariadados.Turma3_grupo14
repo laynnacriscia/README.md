@@ -1,4 +1,6 @@
+# Conteúdo Guiado
 ### **1. Introdução: A Missão da Livraria DevSaber**
+
 
 **Contexto para o professor transmitir:**
 
@@ -7,4 +9,86 @@
 **Perguntas para a turma:**
 
 - Por que uma planilha não é ideal para uma empresa que quer analisar suas vendas a fundo?
-- Que tipo de perguntas vocês acham que o dono da livraria gostaria de responder com esses dados?
+- Que tipo de perguntas vocês acham que o dono da livraria gostaria de responder com esses dados?### **2. Estruturando o Armazenamento: `CREATE TABLE` no BigQuery**
+
+**Contexto para o professor transmitir:**
+
+“O primeiro passo em qualquer projeto de dados é construir a ‘casa’ onde os dados vão morar. No BigQuery, fazemos isso com o `CREATE TABLE`. Mas, diferente dos bancos de dados tradicionais, o BigQuery tem suas próprias regras de arquitetura. Ele é construído para ser incrivelmente rápido com volumes de dados gigantescos, e isso muda um pouco a forma como definimos nossas tabelas.”
+
+
+### 1.1 - Objetivo de Aprendizagem
+
+O objetivo fundamental é capacitar o aluno a aplicar o ciclo completo de manipulação de dados em um ambiente de banco de dados relacional, desde a criação da estrutura até a extração de análises, resolvendo um problema de negócio prático com SQL.
+
+Especificamente, ao final do projeto, o aluno será capaz de:
+
+- **Estruturar um schema** de banco de dados, utilizando `CREATE TABLE` para definir tabelas, colunas e os tipos de dados adequados para armazenar informações de forma normalizada.
+- **Realizar a ingestão de dados**, utilizando o comando `INSERT INTO` para popular as tabelas criadas a partir de um conjunto de dados brutos.
+- **Construir consultas SQL analíticas**, combinando múltiplas tabelas com `JOIN`, filtrando resultados com `WHERE` e agregando informações com `GROUP BY` para responder a perguntas de negócio.
+- **Desenvolver uma `VIEW`** como um mecanismo de reuso e automação, simplificando o acesso a relatórios complexos e recorrentes.
+
+### 1.2 - Conteúdo
+
+**1. Estruturando o Armazenamento: `CREATE TABLE` no BigQuery**
+
+No BigQuery, a definição de um schema ainda é o primeiro passo, mas com particularidades importantes.
+
+- **Sintaxe e Nomenclatura:**
+    - O comando `CREATE TABLE` é utilizado, mas é uma boa prática usar `CREATE OR REPLACE TABLE`. Isso permite que o script de criação seja executado várias vezes sem gerar erros, substituindo a tabela existente.
+    - A nomenclatura completa de uma tabela segue o padrão `projeto.dataset.tabela`. Para os alunos, é importante entender que as tabelas vivem dentro de um "conjunto de dados" (dataset), que por sua vez está dentro de um "projeto" no Google Cloud.
+- **Tipos de Dados (Diferenças Chave):**
+    - **Texto:** Não existe `VARCHAR` ou `TEXT`. O tipo de dado padrão e universal para texto é **`STRING`**.
+    - **Números Inteiros:** O tipo padrão é **`INT64`** (um inteiro de 64 bits). `INTEGER` é um alias para `INT64`.
+    - **Números Decimais:** Em vez de `DECIMAL`, o BigQuery usa **`NUMERIC`** para números decimais de precisão fixa, ideal para cálculos financeiros. `FLOAT64` também está disponível para números de ponto flutuante.
+    - **Data/Hora:** Os tipos como `DATE`, `DATETIME`, `TIMESTAMP` são semelhantes aos do SQL padrão e funcionam como esperado.
+- **O Conceito de "Sem Chaves" (Paradigma Fundamental):**
+    - O BigQuery **não impõe restrições** de `PRIMARY KEY` ou `FOREIGN KEY`. Você pode declará-las em algumas ferramentas de modelagem, mas o BigQuery as ignora.
+    - **Por quê?** Como um sistema de armazenamento colunar otimizado para leitura e agregação, a verificação de unicidade em cada inserção (como faz uma `PRIMARY KEY`) seria um gargalo de performance massivo.
+    - **Implicação Prática:** Os relacionamentos entre tabelas (ex: entre `Vendas` e `Clientes`) são puramente **lógicos**. Eles são definidos e garantidos no momento da consulta, através da condição na cláusula `JOIN ... ON`. A responsabilidade pela integridade referencial é transferida do banco de dados para o desenvolvedor ou o processo de ETL/ELT.
+
+---
+
+**2. Carregando Dados: Ingestão com `INSERT` no BigQuery**
+
+A ingestão de dados também reflete a natureza analítica do BigQuery.
+
+- **Comando `INSERT INTO`:**
+    - Para o escopo do nosso projeto, o comando `INSERT INTO ... VALUES (...)` funciona exatamente como no SQL padrão e é perfeitamente adequado para inserir um pequeno volume de dados.
+    - A sintaxe para inserir múltiplas linhas em um único comando é suportada e eficiente para este caso.
+- **Contexto de Big Data (Para seu conhecimento):**
+    - É importante saber que, em um cenário real com milhões de registros, o `INSERT` linha a linha não é a abordagem recomendada.
+    - Os métodos preferenciais para ingestão em massa no BigQuery são:
+        1. **Carregamento em lote (Batch Load):** Fazer o upload de arquivos (CSV, JSON, Parquet) diretamente do Google Cloud Storage. É a forma mais rápida e barata.
+        2. **Streaming:** Inserir dados em tempo real, registro por registro, através da API de streaming do BigQuery.
+
+---
+
+**3. Analisando Dados: Consultas (`JOIN`, `GROUP BY`) no BigQuery**
+
+A sintaxe para consultar dados no BigQuery é em grande parte compatível com o padrão ANSI SQL. As habilidades que os alunos aprenderam são diretamente transferíveis.
+
+- **`SELECT`, `FROM`, `WHERE`, `JOIN`, `GROUP BY`, `ORDER BY`:**
+    - Todos esses comandos funcionam como esperado. A lógica de `INNER JOIN` para combinar tabelas, `WHERE` para filtrar, `GROUP BY` para agregar com `SUM()` e `COUNT()`, e `ORDER BY` para classificar, é a mesma.
+    - Os alunos não precisarão reaprender a sintaxe fundamental das consultas.
+- **Otimização e Modelo de Custo (Diferença Crucial):**
+    - O modelo de custo do BigQuery não é baseado em tempo de execução, mas sim na **quantidade de dados processados (lidos/escaneados) pela consulta**.
+    - Isso muda a forma como pensamos em otimização:
+        - **Evite `SELECT *`:** Esta é a regra de ouro no BigQuery. Selecionar todas as colunas força o BigQuery a ler todos os dados de todas as colunas referenciadas, o que pode ser muito caro. Sempre especifique apenas as colunas de que você precisa.
+        - **Filtre o mais cedo possível:** Use a cláusula `WHERE` para reduzir drasticamente a quantidade de dados que precisam ser processados nas etapas posteriores da consulta (como `JOINs` e agregações).
+        - **(Avançado) Particionamento e Clusterização:** Para tabelas muito grandes, elas podem ser particionadas (geralmente por data) e clusterizadas (ordenadas por colunas específicas). Consultas que filtram por essas colunas podem escanear apenas uma fração dos dados, resultando em uma economia massiva de custos e um aumento de performance.
+
+---
+
+**4. Automação e Reuso: `VIEW` no BigQuery**
+
+As Views no BigQuery são uma ferramenta poderosa para simplificar a complexidade e garantir a consistência, funcionando de maneira muito semelhante ao SQL padrão.
+
+- **Sintaxe `CREATE OR REPLACE VIEW`:**
+    - O comando funciona como esperado. A `VIEW` é criada como um objeto dentro do seu dataset.
+    - Assim como as tabelas, ela pode ser consultada usando a nomenclatura completa `projeto.dataset.nome_da_view`.
+- **Natureza da View:**
+    - Uma `VIEW` no BigQuery é **lógica**, não materializada (por padrão). Isso significa que ela não armazena os dados resultantes.
+    - Toda vez que a `VIEW` é consultada, o BigQuery executa a consulta SQL subjacente que a define. O custo de consultar a `VIEW` é o mesmo custo de executar a consulta original.
+    - O principal benefício é o reuso e a abstração da lógica de negócio complexa.
+
+
